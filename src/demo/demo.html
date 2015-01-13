@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html>
+  <!--
+
+ dalclient library - provides utilities to assist in using KDDart-DAL servers
+ Copyright (C) 2015  Diversity Arrays Technology
+
+ This program is free software: you can redistribute it and/or modify
+ it under the terms of the GNU General Public License as published by
+ the Free Software Foundation, either version 3 of the License, or
+ (at your option) any later version.
+
+ This program is distributed in the hope that it will be useful,
+ but WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ GNU General Public License for more details.
+
+ You should have received a copy of the GNU General Public License
+ along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+    -->
+  <head>
+    <title>DAL Client DEMO</title>
+
+    <link rel="stylesheet" href="../../lib/jquery-ui/css/jquery-ui.css"/>
+    <link rel="stylesheet" href="../../lib/jquery-ui/css/jquery.ui.resizable.css"/>
+
+    <script type="text/javascript" src="../../lib/jquery-1.9.1.js"></script>
+
+
+    <script type="text/javascript" src="../../lib/jquery.tinypubsub.min.js"></script>
+
+    <script type="text/javascript" src="../../lib/jquery-ui/jquery.ui.core.min.js"></script>
+    <script type="text/javascript" src="../../lib/jquery-ui/jquery.ui.widget.min.js"></script>
+    <script type="text/javascript" src="../../lib/jquery-ui/jquery.ui.mouse.min.js"></script>
+    <script type="text/javascript" src="../../lib/jquery-ui/jquery.ui.draggable.min.js"></script>
+    <script type="text/javascript" src="../../lib/jquery-ui/jquery.ui.resizable.min.js"></script>
+
+    <script type="text/javascript" src="../../lib/lodash.min.js"></script>
+    <script type="text/javascript" src="../../lib/sha1.js"></script>
+
+    <script type="text/javascript" src="../main/dal-client.js"></script>
+
+    <script type="text/javascript" src="messageLogger.js"></script>
+    <script type="text/javascript" src="demo-loginout.js"></script>
+    <script type="text/javascript" src="demo-dalops.js"></script>
+    <script type="text/javascript" src="dalop-factory.js"></script>
+    <script>
+function toggleHints() {
+   if ("visible"==$("#usage-hints").css("visibility")) {
+      $("#usage-hints").css("visibility", "hidden");
+      $("#toggle-usage-hints").text("+");
+   }
+   else {
+      $("#usage-hints").css("visibility", "visible");
+      $("#toggle-usage-hints").text("-");
+   }
+}
+    </script>
+    <style>
+#toggle-usage-hints { border: 1px solid black; width: 20px; height: 20px; text-align: center; cursor: pointer; }
+#usage-hints { }
+
+#userId     { width: 4em; }
+#writeToken { }
+#groupId    { width: 4em; }
+#groupName  { width: 10em; }
+#isAdmin    { width: 4em; }
+
+.loginInfo { border: 1px solid #eee; }
+
+ul { margin-top: 0; }
+h3 { margin: 0; }
+    </style>
+  </head>
+  <body>
+    <h1>DAL Client DEMO</h1>
+
+    <div id="loginPanel">
+      <form>
+	<table>
+	  <tbody>
+	    <tr>
+	      <td align="right"><label for="baseurl">DAL URL:</label></td>
+	      <td><input id="baseurl" size="80" type="text"
+			 value="http://kddart-dal.diversityarrays.com/dal/"/></td>
+	      <td><div id="toggle-usage-hints" onclick="toggleHints()">-</div></td>
+	    </tr>
+	    <tr>
+	      <td align="right"><label for="username">Username:</label></td>
+	      <td><input id="username" type="text"/></td>
+	      <td rowspan="4" valign="top">
+		<div id="usage-hints">
+		  Because you are running from a browser, you should check that:
+		  <ul>
+		    <li>
+		      The browser's cross-site scripting (XSS) checks are disabled.
+		      <br/>
+		      (With <i>Chrome</i>, run it from the command line with the option
+		      <code>--disable-web-security</code>)
+		    </li>
+		    <li>
+		      If the DAL URL uses <code>https:</code>, you may need to visit
+		      the URL separately in the browser so that you can tell the browser
+		      to accept the site's security certificate.
+		    </li>
+		  </ul>
+		</div>
+	      </td>
+	    </tr>
+	    <tr>
+	      <td align="right"><label for="password">Password:</label></td>
+	      <td><input id="password" type="password"/></td>
+	    </tr>
+	    <tr>
+	      <td align="right"><label for="autologout" title="Check to automatically timeout session">AutoLogout:</label></td>
+	      <td><input type="checkbox" id="autologout" title="Check to automatically timeout session"/></td>
+	    </tr>
+	    <tr>
+	      <td valign="top">
+		<!-- "submit" make ENTER key work nicely -->
+		<input type="submit" id="loginButton" value="Login" />
+		<br/>
+		<button id="logoutButton" disabled="yes">Logout</button>
+		<br/>
+		<input type="radio" name="responseType" id="rt-XML" value="XML" checked="checked"/><label for="rt-XML">XML</label>
+		<br/>
+		<input type="radio" name="responseType" id="rt-JSON" value="JSON"/><label for="rt-JSON">JSON</label>
+	      </td>
+	      <td>
+		<div id="loginDetails">
+		  <table>
+		    <tbody>
+		      <tr>
+			<td>UserId:</td>
+			<td class="loginInfo" id="userId"></td>
+			<td>WriteToken:</td>
+			<td class="loginInfo" id="writeToken"></td>
+		      </tr>
+		      <tr>
+			<td>GroupId:</td>
+			<td class="loginInfo" id="groupId"></td>
+			<td>GroupName:</td>
+			<td class="loginInfo" id="groupName"></td>
+		      </tr>
+		      <tr>
+			<td>IsAdmin?</td>
+			<td class="loginInfo" id="isAdmin"></td>
+		      </tr>
+		    </tbody>
+		  </table>
+		</div>
+	      </td>
+	    </tr>
+	  </tbody>
+	</table>
+      </form>
+
+      <hr/>
+      <h3>Ad-hoc DAL Operation</h3>
+      <div id="command-div">
+	<table>
+	  <tbody>
+	    <tr>
+	      <td>DAL Operation:</td>
+	      <td><input type="text" id="dal-operation" size="40" disabled="disabled"/></td>
+	    </tr>
+	    <tr>
+	      <td></td>
+	      <td><button id="execute" disabled="disabled">Perform</button></td>
+	    </tr>
+	  </tbody>
+	</table>
+      </div>
+    </div>
+
+    <!-- ================================================================ -->
+    <div id="dal-operations"></div>
+  </body>
+</html>
