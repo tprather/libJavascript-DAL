@@ -174,10 +174,16 @@ var DALUtil = {
 
 
 // ================================================================
-
+// 0.2.1: the demo code uses a generic response handler and some
+//        DAL responses do not have a RecordMeta tag so that
+//        the call to XxxDalResponse.visitResults() with no tagNames
+//        parameter doesn't know what to visit.
+//        Cater for this by constructing an array of all the top-level
+//        tags in the Json or Xml response and using those instead.
+//        
 function DALClient() {
-
-	var VERSION = "0.2";
+	
+	var VERSION = "0.2.1";
 	this.getDALClientVersion = function() {
 		return "DALClient-v"+VERSION;
 	};
@@ -1042,7 +1048,7 @@ XmlDalResponse.prototype._asRowdata = function($xmlnode) {
 	return rowdata;
 };
 
-XmlDalResponse.prototype.getRecordMetaTagNames = function() {
+XmlDalResponse.prototype.getRecordMetaTagNames = function(fakeIt) {
 
 	var $xml = this._getXmlDoc();
 
@@ -1053,6 +1059,11 @@ XmlDalResponse.prototype.getRecordMetaTagNames = function() {
 			tagNames.push(tagName);
 		}
 	});
+	if ((tagNames.length<=0) && fakeIt) {
+		$xml.find("DATA").children().each(function(a,b){
+			tagNames.push(b.tagName);
+		});
+	}
 	return tagNames;
 };
 
@@ -1067,7 +1078,7 @@ XmlDalResponse.prototype.visitResults = function(visitor, tagNamesArray) {
 
 	var tagNames = params.tagNames;
 	if (tagNames.length<=0) {
-		tagNames = this.getRecordMetaTagNames();
+		tagNames = this.getRecordMetaTagNames(true);
 	}
 
 	var $xml = this._getXmlDoc();
@@ -1156,7 +1167,7 @@ JsonDalResponse.prototype.getResponseErrorMessage = function() {
 	return errorParts.length<=0 ? "Error without message!" : errorParts.join(", ");
 };
 
-JsonDalResponse.prototype.getRecordMetaTagNames = function() {
+JsonDalResponse.prototype.getRecordMetaTagNames = function(fakeIt) {
 	var tagNames = [];
 
 	var rmetas = this.json[DALUtil.TAG_RECORD_META];
@@ -1167,6 +1178,13 @@ JsonDalResponse.prototype.getRecordMetaTagNames = function() {
 				tagNames.push(tagName);
 			}
 		});
+	}
+	else if (fakeIt) {
+		for (var tag in this.json) {
+			if (this.json.hasOwnProperty(tag)) {
+				tagNames.push(tag);
+			}
+		}
 	}
 	return tagNames;
 };
@@ -1186,7 +1204,7 @@ JsonDalResponse.prototype.visitResults = function(visitor, tagNamesArray) {
 
 	var tagNames = params.tagNames;
 	if (tagNames.length<=0) {
-		tagNames = this.getRecordMetaTagNames();
+		tagNames = this.getRecordMetaTagNames(true);
 	}
 
 	var nTagNames = tagNames.length
