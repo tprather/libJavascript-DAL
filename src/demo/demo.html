@@ -45,32 +45,73 @@
     <script type="text/javascript" src="demo-loginout.js"></script>
     <script type="text/javascript" src="demo-dalops.js"></script>
     <script type="text/javascript" src="dalop-factory.js"></script>
+    <script src="https://apis.google.com/js/api.js?onload=start" async defer></script>
     <script>
-function toggleHints() {
-   if ("visible"==$("#usage-hints").css("visibility")) {
-      $("#usage-hints").css("visibility", "hidden");
-      $("#toggle-usage-hints").text("+");
-   }
-   else {
-      $("#usage-hints").css("visibility", "visible");
-      $("#toggle-usage-hints").text("-");
-   }
-}
+		function toggleHints() {
+		   if ("visible"==$("#usage-hints").css("visibility")) {
+		      $("#usage-hints").css("visibility", "hidden");
+		      $("#toggle-usage-hints").text("+");
+		   }
+		   else {
+		      $("#usage-hints").css("visibility", "visible");
+		      $("#toggle-usage-hints").text("-");
+		   }
+		}
+    </script>
+    <script>
+	function start() {
+        gapi.load('client:auth2',function(){
+        	auth2 = gapi.client.init({
+        		apiKey    : 'AIzaSyD-0wSiYYwyrZKHu82Z9U6WMY2Fz_io1rM',
+	        	client_id : '495264354820-7a4da27d58t9o1fa1auhck76j69nqugf.apps.googleusercontent.com',
+	        	scope     : 'profile'
+	        }).then(function(){
+	        	gapi.auth2.getAuthInstance().signIn();
+	        	gapi.auth2.getAuthInstance().isSignedIn.listen(function(isSignedIn){
+	        		alert(isSignedIn);
+	        	});
+	        	gapi.auth2.getAuthInstance().isSignedIn.get();
+	        });
+        });
+	}
+    /*
+    	jQuery.ajax({
+    		url        : 'https://accounts.google.com/o/oauth2/v2/auth?'+
+    		jQuery.param({
+    			'client_id'    : '495264354820-7a4da27d58t9o1fa1auhck76j69nqugf.apps.googleusercontent.com',
+    			'redirect_uri' : 'http://localhost/dal/oauth2google',
+    			'response_type': 'code',
+    			'scope'        : 'profile'
+    		}),
+    		type       : 'POST',
+    		/ *
+    		beforeSend : function(request) {
+    			request.setRequestHeader('Access-Control-Allow-Origin','*')
+    		},
+    		contentType: 'jsonp',
+    		* /
+    		success : function(data,textStatus,jqXHR) {
+    			console.log(data);
+    			console.log(textStatus);
+    			console.log(jqXHR);
+    		}
+    	});
+    */
     </script>
     <style>
-#toggle-usage-hints { border: 1px solid black; width: 20px; height: 20px; text-align: center; cursor: pointer; }
-#usage-hints { }
-
-#userId     { width: 4em; }
-#writeToken { }
-#groupId    { width: 4em; }
-#groupName  { width: 10em; }
-#isAdmin    { width: 4em; }
-
-.loginInfo { border: 1px solid #eee; }
-
-ul { margin-top: 0; }
-h3 { margin: 0; }
+		#toggle-usage-hints { border: 1px solid black; width: 20px; height: 20px; text-align: center; cursor: pointer; }
+		#usage-hints { }
+		
+		#userId     { width: 4em; }
+		#writeToken { }
+		#groupId    { width: 4em; }
+		#groupName  { width: 10em; }
+		#isAdmin    { width: 4em; }
+		
+		.loginInfo { border: 1px solid #eee; }
+		
+		ul { margin-top: 0; }
+		h3 { margin: 0; }
     </style>
   </head>
   <body>
@@ -78,99 +119,99 @@ h3 { margin: 0; }
 
     <div id="loginPanel">
       <form>
-	<table>
-	  <tbody>
-	    <tr>
-	      <td align="right"><label for="baseurl">DAL URL:</label></td>
-	      <td><input id="baseurl" size="80" type="text"
-			 value="http://localhost:40112/dal/"/></td>
-	      <td><div id="toggle-usage-hints" onclick="toggleHints()">-</div></td>
-	    </tr>
-	    <tr>
-	      <td align="right"><label for="username">Username:</label></td>
-	      <td><input id="username" type="text"/></td>
-	      <td rowspan="4" valign="top">
-		<div id="usage-hints">
-		  Because you are running from a browser, you should check that:
-		  <ul>
-		    <li>
-		      The browser's cross-site scripting (XSS) checks are disabled.
-		      <br/>
-		      (With <i>Chrome</i>, run it from the command line with the option
-		      <code>--disable-web-security</code>)
-		    </li>
-		    <li>
-		      If the DAL URL uses <code>https:</code>, you may need to visit
-		      the URL separately in the browser so that you can tell the browser
-		      to accept the site's security certificate.
-		    </li>
-		  </ul>
-		</div>
-	      </td>
-	    </tr>
-	    <tr>
-	      <td align="right"><label for="password">Password:</label></td>
-	      <td><input id="password" type="password"/></td>
-	    </tr>
-	    <tr>
-	      <td align="right"><label for="autologout" title="Check to automatically timeout session">AutoLogout:</label></td>
-	      <td><input type="checkbox" id="autologout" title="Check to automatically timeout session"/></td>
-	    </tr>
-	    <tr>
-	      <td valign="top">
-		<!-- "submit" make ENTER key work nicely -->
-		<input type="submit" id="loginButton" value="Login" />
-		<br/>
-		<button id="logoutButton" disabled="yes">Logout</button>
-		<br/>
-		<input type="radio" name="responseType" id="rt-XML" value="XML" checked="checked"/><label for="rt-XML">XML</label>
-		<br/>
-		<input type="radio" name="responseType" id="rt-JSON" value="JSON"/><label for="rt-JSON">JSON</label>
-	      </td>
-	      <td>
-		<div id="loginDetails">
-		  <table>
-		    <tbody>
-		      <tr>
-			<td>UserId:</td>
-			<td class="loginInfo" id="userId"></td>
-			<td>WriteToken:</td>
-			<td class="loginInfo" id="writeToken"></td>
-		      </tr>
-		      <tr>
-			<td>GroupId:</td>
-			<td class="loginInfo" id="groupId"></td>
-			<td>GroupName:</td>
-			<td class="loginInfo" id="groupName"></td>
-		      </tr>
-		      <tr>
-			<td>IsAdmin?</td>
-			<td class="loginInfo" id="isAdmin"></td>
-		      </tr>
-		    </tbody>
-		  </table>
-		</div>
-	      </td>
-	    </tr>
-	  </tbody>
-	</table>
+		<table>
+		  <tbody>
+		    <tr>
+		      <td align="right"><label for="baseurl">DAL URL:</label></td>
+		      <td><input id="baseurl" size="80" type="text"
+				 value="http://localhost:40112/dal/"/></td>
+		      <td><div id="toggle-usage-hints" onclick="toggleHints()">-</div></td>
+		    </tr>
+		    <tr>
+		      <td align="right"><label for="username">Username:</label></td>
+		      <td><input id="username" type="text"/></td>
+		      <td rowspan="4" valign="top">
+			<div id="usage-hints">
+			  Because you are running from a browser, you should check that:
+			  <ul>
+			    <li>
+			      The browser's cross-site scripting (XSS) checks are disabled.
+			      <br/>
+			      (With <i>Chrome</i>, run it from the command line with the option
+			      <code>--disable-web-security</code>)
+			    </li>
+			    <li>
+			      If the DAL URL uses <code>https:</code>, you may need to visit
+			      the URL separately in the browser so that you can tell the browser
+			      to accept the site's security certificate.
+			    </li>
+			  </ul>
+			</div>
+		      </td>
+		    </tr>
+		    <tr>
+		      <td align="right"><label for="password">Password:</label></td>
+		      <td><input id="password" type="password"/></td>
+		    </tr>
+		    <tr>
+		      <td align="right"><label for="autologout" title="Check to automatically timeout session">AutoLogout:</label></td>
+		      <td><input type="checkbox" id="autologout" title="Check to automatically timeout session"/></td>
+		    </tr>
+		    <tr>
+		      <td valign="top">
+			<!-- "submit" make ENTER key work nicely -->
+			<input type="submit" id="loginButton" value="Login" />
+			<br/>
+			<button id="logoutButton" disabled="yes">Logout</button>
+			<br/>
+			<input type="radio" name="responseType" id="rt-XML" value="XML" checked="checked"/><label for="rt-XML">XML</label>
+			<br/>
+			<input type="radio" name="responseType" id="rt-JSON" value="JSON"/><label for="rt-JSON">JSON</label>
+		      </td>
+		      <td>
+			<div id="loginDetails">
+			  <table>
+			    <tbody>
+			      <tr>
+				<td>UserId:</td>
+				<td class="loginInfo" id="userId"></td>
+				<td>WriteToken:</td>
+				<td class="loginInfo" id="writeToken"></td>
+			      </tr>
+			      <tr>
+				<td>GroupId:</td>
+				<td class="loginInfo" id="groupId"></td>
+				<td>GroupName:</td>
+				<td class="loginInfo" id="groupName"></td>
+			      </tr>
+			      <tr>
+				<td>IsAdmin?</td>
+				<td class="loginInfo" id="isAdmin"></td>
+			      </tr>
+			    </tbody>
+			  </table>
+			</div>
+		      </td>
+		    </tr>
+		  </tbody>
+		</table>
       </form>
 
       <hr/>
       <h3>Ad-hoc DAL Operation</h3>
       <div id="command-div">
-	<table>
-	  <tbody>
-	    <tr>
-	      <td>DAL Operation:</td>
-	      <td><input type="text" id="dal-operation" size="40" disabled="disabled"/></td>
-	    </tr>
-	    <tr>
-	      <td></td>
-	      <td><button id="execute" disabled="disabled">Perform</button></td>
-	    </tr>
-	  </tbody>
-	</table>
+		<table>
+		  <tbody>
+		    <tr>
+		      <td>DAL Operation:</td>
+		      <td><input type="text" id="dal-operation" size="40" disabled="disabled"/></td>
+		    </tr>
+		    <tr>
+		      <td></td>
+		      <td><button id="execute" disabled="disabled">Perform</button></td>
+		    </tr>
+		  </tbody>
+		</table>
       </div>
     </div>
 
